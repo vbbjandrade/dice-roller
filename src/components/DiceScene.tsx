@@ -1,6 +1,5 @@
-import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useRef, useEffect, useMemo, Dispatch, SetStateAction } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useSpring, animated } from "@react-spring/three";
 import {
   Mesh,
   TetrahedronGeometry,
@@ -10,91 +9,55 @@ import {
   DodecahedronGeometry,
   IcosahedronGeometry,
 } from "three";
+import {
+  DICE_SIZE,
+  INITIAL_ROTATION_MAP,
+  Die as DieType,
+  Faces,
+  NUM_ROTATIONS,
+  TOTAL_ANIMATION_DURATION,
+  ANIMATION_START_DELAY,
+  ROLL_DURATION,
+} from "../utils";
 
-interface Die {
-  id: number;
-  faces: number;
-}
-
-interface DiceSceneProps {
-  dice: Die[];
-  isRolling: boolean;
-  onAnimationPlayed: () => void;
-}
-
-const DICE_SIZE = 50.0;
-const NUM_ROTATIONS = 15.0; // Number of full rotations for the dice
-const ROLL_DURATION = 2055;
-const ANIMATION_START_DELAY = 180; // Delay before animation starts (ms)
-const ANIMATION_END_DELAY = 1475; // Delay at end of animation (ms)
-const TOTAL_ANIMATION_DURATION =
-  ROLL_DURATION + ANIMATION_START_DELAY + ANIMATION_END_DELAY;
-
-// Dice component that handles individual die rendering and animation
 function Die({
   faces,
   position,
   isRolling,
   scale = 1,
+  remove,
+  onRemoveAnimation,
 }: {
-  faces: number;
+  faces: Faces;
   position: [number, number, number];
   isRolling: boolean;
-  scale?: number;
+  scale: number;
+  remove: boolean;
+  onRemoveAnimation: () => void;
 }) {
   const meshRef = useRef<Mesh>(null);
   const startTimeRef = useRef<number | null>(null);
-  const hasCompletedRef = useRef(false);
-
-  const [springs, api] = useSpring(
-    () => ({
-      scale: 0,
-    }),
-    []
-  );
+  const hasCompletedRollRef = useRef(false);
 
   useEffect(() => {
-    api.start({
-      scale,
-    });
-  }, [scale]);
+    if (!remove) return;
+    onRemoveAnimation();
+  }, [remove]);
 
-  // Calculate initial rotation based on die type
-  const getInitialRotation = useCallback((): [number, number, number] => {
-    switch (faces) {
-      case 4:
-        return [Math.PI * 0.8, Math.PI * 0.25, 0];
-      case 6:
-        return [0, 0, 0];
-      case 8:
-        return [Math.PI * 0.2, Math.PI * 0.25, 0];
-      case 10:
-        return [Math.PI * 0.65, Math.PI * 0, Math.PI * 0.3];
-      case 12:
-        return [Math.PI * 0.175, Math.PI * 0.5, 0];
-      case 20:
-        return [Math.PI * 0.125, Math.PI * 0.5, 0];
-      default:
-        return [0, 0, 0];
-    }
-  }, [faces]);
-
-  // Reset animation state when rolling starts
   useEffect(() => {
     if (isRolling) {
       startTimeRef.current = null;
-      hasCompletedRef.current = false;
+      hasCompletedRollRef.current = false;
 
       if (meshRef.current) {
-        const [initialX, initialY, initialZ] = getInitialRotation();
+        const [initialX, initialY, initialZ] = INITIAL_ROTATION_MAP[faces];
         meshRef.current.rotation.set(initialX, initialY, initialZ);
       }
     }
-  }, [isRolling, getInitialRotation]);
+  }, [isRolling]);
 
-  // Handle the roll animation
   useFrame((_, delta) => {
-    if (!meshRef.current || !isRolling || hasCompletedRef.current) return;
+    if (!meshRef.current || !isRolling || hasCompletedRollRef.current) return;
 
     // Initialize start time if not set
     if (startTimeRef.current === null) {
@@ -114,13 +77,13 @@ function Die({
 
     // Check if animation is complete
     if (elapsed >= TOTAL_ANIMATION_DURATION) {
-      const [initialX, initialY, initialZ] = getInitialRotation();
+      const [initialX, initialY, initialZ] = INITIAL_ROTATION_MAP[faces];
       meshRef.current.rotation.set(
         initialX + NUM_ROTATIONS * 2 * Math.PI * 2,
         initialY + NUM_ROTATIONS * Math.PI * 2,
         initialZ + NUM_ROTATIONS * Math.PI * 2
       );
-      hasCompletedRef.current = true;
+      hasCompletedRollRef.current = true;
       return;
     }
 
@@ -132,7 +95,7 @@ function Die({
     };
 
     const easedProgress = activeProgress >= 1 ? 1 : customEase(activeProgress);
-    const [initialX, initialY, initialZ] = getInitialRotation();
+    const [initialX, initialY, initialZ] = INITIAL_ROTATION_MAP[faces];
 
     meshRef.current.rotation.set(
       initialX + NUM_ROTATIONS * 2 * Math.PI * (easedProgress + 1),
@@ -144,12 +107,12 @@ function Die({
   // Handle visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && isRolling && !hasCompletedRef.current) {
+      if (document.hidden && isRolling && !hasCompletedRollRef.current) {
         if (meshRef.current) {
-          const [initialX, initialY, initialZ] = getInitialRotation();
+          const [initialX, initialY, initialZ] = INITIAL_ROTATION_MAP[faces];
           meshRef.current.rotation.set(initialX, initialY, initialZ);
         }
-        hasCompletedRef.current = true;
+        hasCompletedRollRef.current = true;
       }
     };
 
@@ -157,9 +120,8 @@ function Die({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isRolling, getInitialRotation]);
+  }, [isRolling]);
 
-  // Create die geometry based on type
   const getGeometry = () => {
     let geometry;
     switch (faces) {
@@ -245,11 +207,11 @@ function Die({
 
   return (
     <>
-      <animated.mesh
+      <mesh
         ref={meshRef}
         position={position}
-        rotation={getInitialRotation()}
-        scale={springs.scale}
+        scale={scale}
+        rotation={INITIAL_ROTATION_MAP[faces]}
       >
         <primitive object={getGeometry()} />
         <meshStandardMaterial
@@ -258,13 +220,24 @@ function Die({
           roughness={0.5}
           envMapIntensity={0.2}
         />
-      </animated.mesh>
+      </mesh>
     </>
   );
 }
 
-// Scene component that handles camera and lighting
-function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
+interface DiceSceneProps {
+  dice: DieType[];
+  diceSetter: Dispatch<SetStateAction<DieType[]>>;
+  isRolling: boolean;
+  onAnimationPlayed: () => void;
+}
+
+function Scene({
+  dice,
+  diceSetter,
+  isRolling,
+  onAnimationPlayed,
+}: DiceSceneProps) {
   const { viewport } = useThree();
 
   // Track when all dice animations are complete
@@ -278,7 +251,6 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
     }
   }, [isRolling, onAnimationPlayed]);
 
-  // Calculate total number of dice
   const diceCount = useMemo(() => dice.length, [dice]);
 
   // Calculate dimensions and scale based on viewport and dice count
@@ -320,9 +292,14 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
         faces: die.faces,
         position,
         scale: finalScale,
+        remove: die.remove,
       };
     });
   }, [dice, diceCount, finalSpacing, finalScale]);
+
+  useEffect(() => {
+    console.log("zap", diceList);
+  }, [diceList]);
 
   return (
     <>
@@ -331,24 +308,30 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
       <directionalLight position={[5, 5, 5]} intensity={1} />
       <directionalLight position={[-5, 5, 5]} intensity={1} />
       <color attach="background" args={[0x000000]} />
-      {diceList.map(({ faces, position, scale, id }) => (
+      {diceList.map(({ faces, position, scale, id, remove }) => (
         <Die
           key={id}
           faces={faces}
           position={position}
           isRolling={isRolling}
           scale={scale}
+          remove={remove}
+          onRemoveAnimation={() => {
+            diceSetter((prev) => {
+              return prev.filter((d) => d.id !== id);
+            });
+          }}
         />
       ))}
     </>
   );
 }
 
-// Main component
 export function DiceScene({
   dice,
   isRolling,
   onAnimationPlayed,
+  diceSetter,
 }: DiceSceneProps) {
   return (
     <div
@@ -365,6 +348,7 @@ export function DiceScene({
       <Canvas orthographic camera={{ position: [0, 0, 200], zoom: 1 }}>
         <Scene
           dice={dice}
+          diceSetter={diceSetter}
           isRolling={isRolling}
           onAnimationPlayed={onAnimationPlayed}
         />

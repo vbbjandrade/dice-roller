@@ -3,31 +3,30 @@ import { DiceRoll } from "@dice-roller/rpg-dice-roller";
 import { DiceButton } from "./components/DiceButton";
 import { DiceScene } from "./components/DiceScene";
 import "./App.css";
-
-interface Die {
-  id: number;
-  faces: number;
-}
+import { Die, FACES, Faces } from "./utils";
 
 function App() {
   const [dice, setDice] = useState<Die[]>([]);
   const [isRolling, setIsRolling] = useState(false);
   const nextIdRef = useRef(1);
 
-  const handleDiceAdd = (faces: number) => {
+  const handleDiceAdd = (faces: Faces) => {
     setDice((prev) => {
-      const newDie = { id: nextIdRef.current++, faces };
-      return [...prev, newDie].sort((a, b) => a.faces - b.faces);
+      const newDie = { id: nextIdRef.current++, faces, remove: false };
+      return [...prev, newDie];
     });
   };
 
-  const handleDiceRemove = (faces: number) => {
+  const handleDiceRemove = (faces: Faces) => {
     setDice((prev) => {
-      const index = prev.findIndex((d) => d.faces === faces);
+      const index = prev
+        .slice()
+        .reverse()
+        .findIndex((d) => d.faces === faces);
       if (index === -1) return prev;
-      return prev
-        .filter((_, i) => i !== index)
-        .sort((a, b) => a.faces - b.faces);
+      const updatedDice = [...prev];
+      updatedDice[prev.length - 1 - index].remove = true;
+      return updatedDice;
     });
   };
 
@@ -54,6 +53,7 @@ function App() {
     <div>
       <DiceScene
         dice={dice}
+        diceSetter={setDice}
         isRolling={isRolling}
         onAnimationPlayed={() => {
           setIsRolling(false);
@@ -63,10 +63,10 @@ function App() {
         <div className="dice-buttons-container">
           <div className="dice-buttons">
             <div style={{ width: "16px" }}></div>
-            {[4, 6, 8, 10, 12, 20].map((faces) => (
+            {Object.entries(FACES).map(([key, faces]) => (
               <DiceButton
-                key={faces}
-                faces={faces as 4 | 6 | 8 | 10 | 12 | 20}
+                key={key}
+                faces={faces}
                 count={getDiceCount(faces)}
                 onAdd={() => handleDiceAdd(faces)}
                 onRemove={() => handleDiceRemove(faces)}
