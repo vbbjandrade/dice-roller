@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useSpring, animated } from "@react-spring/three";
 import {
   Mesh,
   TetrahedronGeometry,
@@ -45,6 +46,19 @@ function Die({
   const startTimeRef = useRef<number | null>(null);
   const hasCompletedRef = useRef(false);
 
+  const [springs, api] = useSpring(
+    () => ({
+      scale: 0,
+    }),
+    []
+  );
+
+  useEffect(() => {
+    api.start({
+      scale,
+    });
+  }, [scale]);
+
   // Calculate initial rotation based on die type
   const getInitialRotation = useCallback((): [number, number, number] => {
     switch (faces) {
@@ -64,13 +78,6 @@ function Die({
         return [0, 0, 0];
     }
   }, [faces]);
-
-  // Set initial scale
-  useEffect(() => {
-    if (meshRef.current) {
-      meshRef.current.scale.set(scale, scale, scale);
-    }
-  }, [scale]);
 
   // Reset animation state when rolling starts
   useEffect(() => {
@@ -140,11 +147,7 @@ function Die({
       if (document.hidden && isRolling && !hasCompletedRef.current) {
         if (meshRef.current) {
           const [initialX, initialY, initialZ] = getInitialRotation();
-          meshRef.current.rotation.set(
-            initialX + NUM_ROTATIONS * 2 * Math.PI * 2,
-            initialY + NUM_ROTATIONS * Math.PI * 2,
-            initialZ + NUM_ROTATIONS * Math.PI * 2
-          );
+          meshRef.current.rotation.set(initialX, initialY, initialZ);
         }
         hasCompletedRef.current = true;
       }
@@ -241,15 +244,22 @@ function Die({
   };
 
   return (
-    <mesh ref={meshRef} position={position} rotation={getInitialRotation()}>
-      <primitive object={getGeometry()} />
-      <meshStandardMaterial
-        color={0xffffff}
-        metalness={0.1}
-        roughness={0.5}
-        envMapIntensity={0.2}
-      />
-    </mesh>
+    <>
+      <animated.mesh
+        ref={meshRef}
+        position={position}
+        rotation={getInitialRotation()}
+        scale={springs.scale}
+      >
+        <primitive object={getGeometry()} />
+        <meshStandardMaterial
+          color={0xffffff}
+          metalness={0.1}
+          roughness={0.5}
+          envMapIntensity={0.2}
+        />
+      </animated.mesh>
+    </>
   );
 }
 
