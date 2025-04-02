@@ -4,51 +4,33 @@ import { DiceButton } from "./components/DiceButton";
 import { DiceScene } from "./components/DiceScene";
 import "./App.css";
 
-interface SelectedDice {
+interface Die {
   faces: number;
-  count: number;
 }
 
 function App() {
-  const [selectedDice, setSelectedDice] = useState<SelectedDice[]>([]);
+  const [dice, setDice] = useState<Die[]>([]);
   const [isRolling, setIsRolling] = useState(false);
 
   const handleDiceAdd = (faces: number) => {
-    setSelectedDice((prev) => {
-      const existing = prev.find((d) => d.faces === faces);
-      if (existing) {
-        return prev
-          .map((d) => (d.faces === faces ? { ...d, count: d.count + 1 } : d))
-          .sort((a, b) => a.faces - b.faces);
-      }
-      return [...prev, { faces, count: 1 }].sort((a, b) => a.faces - b.faces);
-    });
+    setDice((prev) => [...prev, { faces }].sort((a, b) => a.faces - b.faces));
   };
 
   const handleDiceRemove = (faces: number) => {
-    setSelectedDice((prev) => {
-      const existing = prev.find((d) => d.faces === faces);
-      if (existing) {
-        if (existing.count === 1) {
-          return prev
-            .filter((d) => d.faces !== faces)
-            .sort((a, b) => a.faces - b.faces);
-        }
-        return prev
-          .map((d) => (d.faces === faces ? { ...d, count: d.count - 1 } : d))
-          .sort((a, b) => a.faces - b.faces);
-      }
-      return prev;
+    setDice((prev) => {
+      const index = prev.findIndex((d) => d.faces === faces);
+      if (index === -1) return prev;
+      return prev
+        .filter((_, i) => i !== index)
+        .sort((a, b) => a.faces - b.faces);
     });
   };
 
   function rollDice() {
-    if (selectedDice.length === 0) return;
+    if (dice.length === 0) return;
 
     // Calculate roll results first
-    const expression = selectedDice
-      .map((d) => `${d.count}d${d.faces}`)
-      .join("+");
+    const expression = dice.map((d) => `1d${d.faces}`).join("+");
     const roll = new DiceRoll(expression);
 
     console.log(`Total for ${expression}:`, roll.total);
@@ -60,13 +42,13 @@ function App() {
   }
 
   const getDiceCount = (faces: number) => {
-    return selectedDice.find((d) => d.faces === faces)?.count || 0;
+    return dice.filter((d) => d.faces === faces).length;
   };
 
   return (
     <div>
       <DiceScene
-        selectedDice={selectedDice}
+        dice={dice}
         isRolling={isRolling}
         onAnimationPlayed={() => {
           setIsRolling(false);
@@ -91,7 +73,7 @@ function App() {
           <button
             onClick={rollDice}
             className="roll-button"
-            disabled={selectedDice.length === 0 || isRolling}
+            disabled={dice.length === 0 || isRolling}
           >
             <img src="/up.svg" alt="Roll dice" />
           </button>

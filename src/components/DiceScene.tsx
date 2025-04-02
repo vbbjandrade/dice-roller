@@ -10,8 +10,12 @@ import {
   IcosahedronGeometry,
 } from "three";
 
+interface Die {
+  faces: number;
+}
+
 interface DiceSceneProps {
-  selectedDice: Array<{ faces: number; count: number }>;
+  dice: Die[];
   isRolling: boolean;
   onAnimationPlayed: () => void;
 }
@@ -249,7 +253,7 @@ function Die({
 }
 
 // Scene component that handles camera and lighting
-function Scene({ selectedDice, isRolling, onAnimationPlayed }: DiceSceneProps) {
+function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
   const { viewport } = useThree();
   const layoutChangeRef = useRef(false);
   const prevDiceCountRef = useRef(0);
@@ -265,11 +269,8 @@ function Scene({ selectedDice, isRolling, onAnimationPlayed }: DiceSceneProps) {
     }
   }, [isRolling, onAnimationPlayed]);
 
-  // Calculate total number of dice from selectedDice prop
-  const totalDiceCount = useMemo(
-    () => selectedDice.reduce((sum, die) => sum + die.count, 0),
-    [selectedDice]
-  );
+  // Calculate total number of dice
+  const totalDiceCount = useMemo(() => dice.length, [dice]);
 
   // Track dice count changes to force layout recalculation
   useEffect(() => {
@@ -311,22 +312,17 @@ function Scene({ selectedDice, isRolling, onAnimationPlayed }: DiceSceneProps) {
 
   // Calculate positions for all dice
   const allDice = useMemo(() => {
-    let currentIndex = 0;
-    return selectedDice.flatMap((dieInfo) => {
-      const dice = Array.from({ length: dieInfo.count }).map((_, i) => {
-        const x = (currentIndex + i - (totalDiceCount - 1) / 2) * finalSpacing;
-        const position: [number, number, number] = [x, 0, 0];
-        return {
-          faces: dieInfo.faces,
-          position,
-          key: `${dieInfo.faces}-${currentIndex + i}`,
-          scale: finalScale,
-        };
-      });
-      currentIndex += dieInfo.count;
-      return dice;
+    return dice.map((die, index) => {
+      const x = (index - (totalDiceCount - 1) / 2) * finalSpacing;
+      const position: [number, number, number] = [x, 0, 0];
+      return {
+        faces: die.faces,
+        position,
+        key: `${die.faces}-${index}`,
+        scale: finalScale,
+      };
     });
-  }, [selectedDice, totalDiceCount, finalSpacing, finalScale]);
+  }, [dice, totalDiceCount, finalSpacing, finalScale]);
 
   return (
     <>
@@ -350,7 +346,7 @@ function Scene({ selectedDice, isRolling, onAnimationPlayed }: DiceSceneProps) {
 
 // Main component
 export function DiceScene({
-  selectedDice,
+  dice,
   isRolling,
   onAnimationPlayed,
 }: DiceSceneProps) {
@@ -368,7 +364,7 @@ export function DiceScene({
     >
       <Canvas orthographic camera={{ position: [0, 0, 200], zoom: 1 }}>
         <Scene
-          selectedDice={selectedDice}
+          dice={dice}
           isRolling={isRolling}
           onAnimationPlayed={onAnimationPlayed}
         />
