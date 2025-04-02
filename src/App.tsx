@@ -1,19 +1,24 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { DiceRoll } from "@dice-roller/rpg-dice-roller";
 import { DiceButton } from "./components/DiceButton";
 import { DiceScene } from "./components/DiceScene";
 import "./App.css";
 
 interface Die {
+  id: number;
   faces: number;
 }
 
 function App() {
   const [dice, setDice] = useState<Die[]>([]);
   const [isRolling, setIsRolling] = useState(false);
+  const nextIdRef = useRef(1);
 
   const handleDiceAdd = (faces: number) => {
-    setDice((prev) => [...prev, { faces }].sort((a, b) => a.faces - b.faces));
+    setDice((prev) => {
+      const newDie = { id: nextIdRef.current++, faces };
+      return [...prev, newDie].sort((a, b) => a.faces - b.faces);
+    });
   };
 
   const handleDiceRemove = (faces: number) => {

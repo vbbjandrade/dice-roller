@@ -11,6 +11,7 @@ import {
 } from "three";
 
 interface Die {
+  id: number;
   faces: number;
 }
 
@@ -310,15 +311,14 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
     return { scale, spacing };
   }, [viewport.width, viewport.height, totalDiceCount]);
 
-  // Calculate positions for all dice
-  const allDice = useMemo(() => {
+  const diceList = useMemo(() => {
     return dice.map((die, index) => {
       const x = (index - (totalDiceCount - 1) / 2) * finalSpacing;
       const position: [number, number, number] = [x, 0, 0];
       return {
+        id: die.id,
         faces: die.faces,
         position,
-        key: `${die.faces}-${index}`,
         scale: finalScale,
       };
     });
@@ -331,9 +331,9 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
       <directionalLight position={[5, 5, 5]} intensity={1} />
       <directionalLight position={[-5, 5, 5]} intensity={1} />
       <color attach="background" args={[0x000000]} />
-      {allDice.map(({ faces, position, key, scale }) => (
+      {diceList.map(({ faces, position, scale, id }) => (
         <Die
-          key={key}
+          key={id}
           faces={faces}
           position={position}
           isRolling={isRolling}
