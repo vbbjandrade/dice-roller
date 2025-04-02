@@ -266,8 +266,6 @@ function Die({
 // Scene component that handles camera and lighting
 function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
   const { viewport } = useThree();
-  const layoutChangeRef = useRef(false);
-  const prevDiceCountRef = useRef(0);
 
   // Track when all dice animations are complete
   useEffect(() => {
@@ -281,15 +279,7 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
   }, [isRolling, onAnimationPlayed]);
 
   // Calculate total number of dice
-  const totalDiceCount = useMemo(() => dice.length, [dice]);
-
-  // Track dice count changes to force layout recalculation
-  useEffect(() => {
-    if (prevDiceCountRef.current !== totalDiceCount) {
-      layoutChangeRef.current = true;
-      prevDiceCountRef.current = totalDiceCount;
-    }
-  }, [totalDiceCount]);
+  const diceCount = useMemo(() => dice.length, [dice]);
 
   // Calculate dimensions and scale based on viewport and dice count
   const { scale: finalScale, spacing: finalSpacing } = useMemo(() => {
@@ -303,7 +293,7 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
 
     // Calculate minimum total width needed for all dice with spacing
     const minSpacing = DICE_SIZE * 1.5; // Minimum space between dice centers
-    const totalMinWidth = totalDiceCount * minSpacing * padding;
+    const totalMinWidth = diceCount * minSpacing * padding;
 
     // Calculate scale to fit all dice horizontally with padding
     const horizontalScale = viewport.width / totalMinWidth;
@@ -315,15 +305,15 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
     const availableWidth = viewport.width / padding; // Account for padding
     const spacing = Math.min(
       minSpacing * scale,
-      availableWidth / Math.max(totalDiceCount, 1)
+      availableWidth / Math.max(diceCount, 1)
     );
 
     return { scale, spacing };
-  }, [viewport.width, viewport.height, totalDiceCount]);
+  }, [viewport.width, viewport.height, diceCount]);
 
   const diceList = useMemo(() => {
     return dice.map((die, index) => {
-      const x = (index - (totalDiceCount - 1) / 2) * finalSpacing;
+      const x = (index - (diceCount - 1) / 2) * finalSpacing;
       const position: [number, number, number] = [x, 0, 0];
       return {
         id: die.id,
@@ -332,7 +322,7 @@ function Scene({ dice, isRolling, onAnimationPlayed }: DiceSceneProps) {
         scale: finalScale,
       };
     });
-  }, [dice, totalDiceCount, finalSpacing, finalScale]);
+  }, [dice, diceCount, finalSpacing, finalScale]);
 
   return (
     <>
