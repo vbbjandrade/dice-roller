@@ -31,3 +31,9 @@ export const INITIAL_ROTATION_MAP = {
   [FACES.d12]: [Math.PI * 0.175, Math.PI * 0.5, 0],
   [FACES.d20]: [Math.PI * 0.125, Math.PI * 0.5, 0],
 } as const;
+
+export const customEase = (t: number) => {
+  if (t < 0.9) return t;
+  const remaining = t - 0.9;
+  return 0.9 + (1 - Math.pow(1 - remaining / 0.1, 2)) * 0.1;
+};

@@ -2,8 +2,8 @@ import { useState, useRef } from "react";
 import { DiceRoll } from "@dice-roller/rpg-dice-roller";
 import { DiceButton } from "./components/DiceButton";
 import { DiceScene } from "./components/DiceScene";
-import "./App.css";
 import { Die, FACES, Faces } from "./utils";
+import "./App.css";
 
 function App() {
   const [dice, setDice] = useState<Die[]>([]);
