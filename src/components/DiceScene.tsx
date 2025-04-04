@@ -5,27 +5,25 @@ import {
   Dispatch,
   SetStateAction,
   forwardRef,
+  useState,
+  useImperativeHandle,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  Mesh,
-  TetrahedronGeometry,
-  BoxGeometry,
-  OctahedronGeometry,
-  PolyhedronGeometry,
-  DodecahedronGeometry,
-  IcosahedronGeometry,
-} from "three";
+import { Mesh } from "three";
 import {
   DICE_SIZE,
   INITIAL_ROTATION_MAP,
   Die as DieType,
   Faces,
   NUM_ROTATIONS,
-  TOTAL_ANIMATION_DURATION,
-  ANIMATION_START_DELAY,
   ROLL_DURATION,
   customEase,
+  getGeometry,
+  ROLL_ANIMATION_START_DELAY,
+  TOTAL_ROLL_ANIMATION_DURATION,
+  REPOSITION_DURATION,
+  SCALE_DURATION,
+  easeOutCubic,
 } from "../utils";
 
 interface DieProps {
@@ -38,108 +36,106 @@ interface DieProps {
 
 const Die = forwardRef<Mesh, DieProps>(
   ({ faces, position, scale = 1, remove, onRemoveAnimation }, ref) => {
+    const [internalPosition, setInternalPosition] = useState(position);
+    const [internalScale, setInternalScale] = useState(0);
+    const isPositionAnimatingRef = useRef(false);
+    const isScaleAnimatingRef = useRef(false);
+    const positionProgressRef = useRef(0);
+    const scaleProgressRef = useRef(0);
+    const startScaleRef = useRef(scale);
+    const startPositionRef = useRef(position);
+
+    const meshRef = useRef<Mesh>(null);
+    useImperativeHandle(ref, () => meshRef.current!, []);
+
     useEffect(() => {
       if (!remove) return;
       onRemoveAnimation();
     }, [remove]);
 
-    const getGeometry = () => {
-      let geometry;
-      switch (faces) {
-        case 4:
-          geometry = new TetrahedronGeometry(DICE_SIZE * 0.6);
-          geometry.translate(0, DICE_SIZE * 0.15, 0);
-          break;
-        case 6:
-          geometry = new BoxGeometry(
-            DICE_SIZE * 0.825,
-            DICE_SIZE * 0.825,
-            DICE_SIZE * 0.825
-          );
-          break;
-        case 8:
-          geometry = new OctahedronGeometry(DICE_SIZE * 0.6);
-          break;
-        case 10: {
-          const d10Vertices: number[] = [];
-          const d10Faces: number[] = [];
-          const sides = 10;
-
-          for (let i = 0; i < sides; ++i) {
-            const b = (i * Math.PI * 2) / sides;
-            d10Vertices.push(
-              Math.cos(b),
-              Math.sin(b),
-              0.105 * (i % 2 ? 1 : -1)
-            );
-          }
-          d10Vertices.push(0, 0, -1);
-          d10Vertices.push(0, 0, 1);
-
-          [
-            [5, 7, 11, 0],
-            [4, 2, 10, 1],
-            [1, 3, 11, 2],
-            [0, 8, 10, 3],
-            [7, 9, 11, 4],
-            [8, 6, 10, 5],
-            [9, 1, 11, 6],
-            [2, 0, 10, 7],
-            [3, 5, 11, 8],
-            [6, 4, 10, 9],
-          ].forEach((face) => {
-            d10Faces.push(face[0], face[1], face[2]);
-            d10Faces.push(face[0], face[2], face[3]);
-          });
-
-          [
-            [1, 0, 2],
-            [1, 2, 3],
-            [3, 2, 4],
-            [3, 4, 5],
-            [5, 4, 6],
-            [5, 6, 7],
-            [7, 6, 8],
-            [7, 8, 9],
-            [9, 8, 0],
-            [9, 0, 1],
-          ].forEach((face) => {
-            d10Faces.push(face[0], face[1], face[2]);
-          });
-
-          geometry = new PolyhedronGeometry(
-            d10Vertices,
-            d10Faces,
-            DICE_SIZE * 0.6,
-            0
-          );
-          break;
-        }
-        case 12:
-          geometry = new DodecahedronGeometry(DICE_SIZE * 0.55);
-          break;
-        case 20:
-          geometry = new IcosahedronGeometry(DICE_SIZE * 0.6);
-          break;
-        default:
-          geometry = new BoxGeometry(
-            DICE_SIZE * 0.6,
-            DICE_SIZE * 0.6,
-            DICE_SIZE * 0.6
-          );
+    useEffect(() => {
+      if (position !== internalPosition) {
+        isPositionAnimatingRef.current = true;
+        positionProgressRef.current = 0;
+        startPositionRef.current = [
+          meshRef.current?.position.x ?? position[0],
+          meshRef.current?.position.y ?? position[1],
+          meshRef.current?.position.z ?? position[2],
+        ];
       }
-      return geometry;
-    };
+    }, [position, internalPosition]);
+
+    useEffect(() => {
+      if (scale !== internalScale) {
+        isScaleAnimatingRef.current = true;
+        scaleProgressRef.current = 0;
+        startScaleRef.current = meshRef.current?.scale.x ?? scale;
+      }
+    }, [scale, internalScale]);
+
+    useEffect(() => {
+      if (!isPositionAnimatingRef.current) {
+        setInternalPosition(position);
+      }
+    }, [position]);
+
+    useEffect(() => {
+      if (!isScaleAnimatingRef.current) {
+        setInternalScale(scale);
+      }
+    }, [scale]);
+
+    useFrame((_, delta) => {
+      if (!meshRef.current) return;
+
+      // Handle position animation
+      if (isPositionAnimatingRef.current) {
+        positionProgressRef.current += (delta * 1000) / REPOSITION_DURATION;
+        const rawProgress = Math.min(1, positionProgressRef.current);
+        const easedProgress = easeOutCubic(rawProgress);
+
+        const newX =
+          startPositionRef.current[0] +
+          (position[0] - startPositionRef.current[0]) * easedProgress;
+        const newY =
+          startPositionRef.current[1] +
+          (position[1] - startPositionRef.current[1]) * easedProgress;
+        const newZ =
+          startPositionRef.current[2] +
+          (position[2] - startPositionRef.current[2]) * easedProgress;
+        meshRef.current.position.set(newX, newY, newZ);
+
+        if (rawProgress === 1) {
+          isPositionAnimatingRef.current = false;
+        }
+      }
+
+      // Handle scale animation
+      if (isScaleAnimatingRef.current) {
+        scaleProgressRef.current += (delta * 1000) / SCALE_DURATION;
+        const rawProgress = Math.min(1, scaleProgressRef.current);
+        const easedProgress = easeOutCubic(rawProgress);
+
+        const newScale =
+          startScaleRef.current +
+          (scale - startScaleRef.current) * easedProgress;
+        meshRef.current.scale.set(newScale, newScale, newScale);
+
+        if (rawProgress === 1) {
+          isScaleAnimatingRef.current = false;
+        }
+      }
+    });
 
     return (
       <>
         <mesh
-          ref={ref}
-          position={position}
-          scale={scale}
+          ref={meshRef}
+          position={internalPosition}
+          scale={internalScale}
           rotation={INITIAL_ROTATION_MAP[faces]}
         >
-          <primitive object={getGeometry()} />
+          <primitive object={getGeometry(faces)} />
           <meshStandardMaterial
             color={0xffffff}
             metalness={0.1}
@@ -169,29 +165,62 @@ function Scene({
 }: DiceSceneProps) {
   const { viewport } = useThree();
   const diceRefs = useRef<(Mesh | null)[]>([]);
+
   const rollStartTimeRef = useRef<number | null>(null);
   const hasCompletedRollRef = useRef(false);
 
-  // Handle visibility change
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && isRolling && !hasCompletedRollRef.current) {
-        diceRefs.current.forEach((ref, index) => {
-          if (ref) {
-            const [initialX, initialY, initialZ] =
-              INITIAL_ROTATION_MAP[dice[index].faces];
-            ref.rotation.set(initialX, initialY, initialZ);
-          }
-        });
-        hasCompletedRollRef.current = true;
-      }
-    };
+  const diceCount = useMemo(() => dice.length, [dice]);
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isRolling, dice]);
+  // Calculate dimensions and scale based on viewport and dice count
+  const { scale: finalScale, positions } = useMemo(() => {
+    const padding = 1.2;
+    const minSpacing = DICE_SIZE * 1.5;
+
+    // Calculate maximum scale based on viewport height
+    const maxViewportDimension = Math.min(viewport.width, viewport.height);
+    const targetDiceSize = maxViewportDimension * 0.3;
+    const maxSingleDiceScale = targetDiceSize / DICE_SIZE;
+
+    // Calculate optimal grid dimensions
+    const aspectRatio = viewport.width / viewport.height;
+    const optimalColumns = Math.ceil(Math.sqrt(diceCount * aspectRatio));
+    const optimalRows = Math.ceil(diceCount / optimalColumns);
+
+    // Calculate available space for the grid
+    const availableWidth = viewport.width / padding;
+    const availableHeight = viewport.height / padding;
+
+    // Calculate maximum possible scale that fits the grid
+    const maxWidthScale = availableWidth / (optimalColumns * minSpacing);
+    const maxHeightScale = availableHeight / (optimalRows * minSpacing);
+    const scale = Math.min(maxWidthScale, maxHeightScale, maxSingleDiceScale);
+
+    // Calculate final spacing
+    const spacing = minSpacing * scale;
+
+    // Calculate positions for each die in the grid
+    const positions = dice.map((_, index) => {
+      const row = Math.floor(index / optimalColumns);
+      const col = index % optimalColumns;
+      const x = (col - (optimalColumns - 1) / 2) * spacing;
+      const y = -(row - (optimalRows - 1) / 2) * spacing;
+      return [x, y, 0] as [number, number, number];
+    });
+
+    return { scale, positions };
+  }, [viewport.width, viewport.height, diceCount]);
+
+  const diceList = useMemo(() => {
+    return dice.map((die, index) => {
+      return {
+        id: die.id,
+        faces: die.faces,
+        position: positions[index],
+        scale: finalScale,
+        remove: die.remove,
+      };
+    });
+  }, [dice, positions, finalScale]);
 
   // Handle rotation animation
   useFrame((_, delta) => {
@@ -207,14 +236,14 @@ function Scene({
     const elapsed = rollStartTimeRef.current;
 
     // Handle start delay
-    if (elapsed < ANIMATION_START_DELAY) return;
+    if (elapsed < ROLL_ANIMATION_START_DELAY) return;
 
     // Calculate progress
-    const activeElapsed = elapsed - ANIMATION_START_DELAY;
+    const activeElapsed = elapsed - ROLL_ANIMATION_START_DELAY;
     const activeProgress = Math.min(activeElapsed / ROLL_DURATION, 1);
 
     // Check if animation is complete
-    if (elapsed >= TOTAL_ANIMATION_DURATION) {
+    if (elapsed >= TOTAL_ROLL_ANIMATION_DURATION) {
       hasCompletedRollRef.current = true;
       return;
     }
@@ -238,51 +267,6 @@ function Scene({
     });
   });
 
-  const diceCount = useMemo(() => dice.length, [dice]);
-
-  // Calculate dimensions and scale based on viewport and dice count
-  const { scale: finalScale, spacing: finalSpacing } = useMemo(() => {
-    const padding = 1.2;
-
-    // Calculate maximum scale based on viewport height
-    const maxViewportDimension = Math.min(viewport.width, viewport.height);
-    const targetDiceSize = maxViewportDimension * 0.3;
-    const maxSingleDiceScale = targetDiceSize / DICE_SIZE;
-
-    // Calculate minimum total width needed for all dice with spacing
-    const minSpacing = DICE_SIZE * 1.5;
-    const totalMinWidth = diceCount * minSpacing * padding;
-
-    // Calculate scale to fit all dice horizontally with padding
-    const horizontalScale = viewport.width / totalMinWidth;
-
-    // Use the smaller of horizontal fit scale and max single dice scale
-    const scale = Math.min(horizontalScale, maxSingleDiceScale);
-
-    // Calculate final spacing to distribute dice evenly in available space
-    const availableWidth = viewport.width / padding;
-    const spacing = Math.min(
-      minSpacing * scale,
-      availableWidth / Math.max(diceCount, 1)
-    );
-
-    return { scale, spacing };
-  }, [viewport.width, viewport.height, diceCount]);
-
-  const diceList = useMemo(() => {
-    return dice.map((die, index) => {
-      const x = (index - (diceCount - 1) / 2) * finalSpacing;
-      const position: [number, number, number] = [x, 0, 0];
-      return {
-        id: die.id,
-        faces: die.faces,
-        position,
-        scale: finalScale,
-        remove: die.remove,
-      };
-    });
-  }, [dice, diceCount, finalSpacing, finalScale]);
-
   useEffect(() => {
     if (!isRolling) return;
 
@@ -291,10 +275,31 @@ function Scene({
 
     const timer = setTimeout(() => {
       onAnimationPlayed();
-    }, TOTAL_ANIMATION_DURATION);
+    }, TOTAL_ROLL_ANIMATION_DURATION);
 
     return () => clearTimeout(timer);
   }, [isRolling]);
+
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isRolling && !hasCompletedRollRef.current) {
+        diceRefs.current.forEach((ref, index) => {
+          if (ref) {
+            const [initialX, initialY, initialZ] =
+              INITIAL_ROTATION_MAP[dice[index].faces];
+            ref.rotation.set(initialX, initialY, initialZ);
+          }
+        });
+        hasCompletedRollRef.current = true;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isRolling, dice]);
 
   return (
     <>
