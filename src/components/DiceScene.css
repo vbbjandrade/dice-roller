@@ -1,0 +1,347 @@
+.dice-scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.die-sprite {
+  position: absolute;
+  width: var(--dice-size, 10%);
+  height: var(--dice-size, 10%);
+  background-image: var(--final-image);
+  background-size: 100% 100%;
+  transition: top 300ms ease-in-out, left 300ms ease-in-out,
+    width 300ms ease-in-out, height 300ms ease-in-out;
+  animation: scaleIn 300ms ease-in-out;
+  transform-origin: center;
+}
+
+.die-sprite.remove {
+  animation: scaleOut 300ms ease-in-out;
+}
+
+.dice-scene.rolling .die-sprite {
+  background-image: var(--sprite-sheet);
+  background-size: 800% 600%;
+  animation: rollAnimation var(--animation-duration, 2000ms) steps(1)
+    var(--animation-start-delay, 0ms);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(0);
+  }
+}
+
+@keyframes rollAnimation {
+  0% {
+    background-position: 0% 0%;
+  }
+  1.04% {
+    background-position: 0% 20%;
+  }
+  2.08% {
+    background-position: 0% 40%;
+  }
+  3.12% {
+    background-position: 0% 60%;
+  }
+  4.16% {
+    background-position: 0% 80%;
+  }
+  5.2% {
+    background-position: 0% 100%;
+  }
+  6.24% {
+    background-position: 14.285714285714285% 0%;
+  }
+  7.28% {
+    background-position: 14.285714285714285% 20%;
+  }
+  8.32% {
+    background-position: 14.285714285714285% 40%;
+  }
+  9.36% {
+    background-position: 14.285714285714285% 60%;
+  }
+  10.4% {
+    background-position: 14.285714285714285% 80%;
+  }
+  11.44% {
+    background-position: 14.285714285714285% 100%;
+  }
+  12.48% {
+    background-position: 28.57142857142857% 0%;
+  }
+  13.52% {
+    background-position: 28.57142857142857% 20%;
+  }
+  14.56% {
+    background-position: 28.57142857142857% 40%;
+  }
+  15.6% {
+    background-position: 28.57142857142857% 60%;
+  }
+  16.64% {
+    background-position: 28.57142857142857% 80%;
+  }
+  17.68% {
+    background-position: 28.57142857142857% 100%;
+  }
+  18.72% {
+    background-position: 42.857142857142854% 0%;
+  }
+  19.76% {
+    background-position: 42.857142857142854% 20%;
+  }
+  20.8% {
+    background-position: 42.857142857142854% 40%;
+  }
+  21.84% {
+    background-position: 42.857142857142854% 60%;
+  }
+  22.88% {
+    background-position: 42.857142857142854% 80%;
+  }
+  23.92% {
+    background-position: 42.857142857142854% 100%;
+  }
+  24.96% {
+    background-position: 57.14285714285714% 0%;
+  }
+  26% {
+    background-position: 57.14285714285714% 20%;
+  }
+  27.04% {
+    background-position: 57.14285714285714% 40%;
+  }
+  28.08% {
+    background-position: 57.14285714285714% 60%;
+  }
+  29.12% {
+    background-position: 57.14285714285714% 80%;
+  }
+  30.16% {
+    background-position: 57.14285714285714% 100%;
+  }
+  31.2% {
+    background-position: 71.42857142857142% 0%;
+  }
+  32.24% {
+    background-position: 71.42857142857142% 20%;
+  }
+  33.28% {
+    background-position: 71.42857142857142% 40%;
+  }
+  34.32% {
+    background-position: 71.42857142857142% 60%;
+  }
+  35.36% {
+    background-position: 71.42857142857142% 80%;
+  }
+  36.4% {
+    background-position: 71.42857142857142% 100%;
+  }
+  37.44% {
+    background-position: 85.71428571428571% 0%;
+  }
+  38.48% {
+    background-position: 85.71428571428571% 20%;
+  }
+  39.52% {
+    background-position: 85.71428571428571% 40%;
+  }
+  40.56% {
+    background-position: 85.71428571428571% 60%;
+  }
+  41.6% {
+    background-position: 85.71428571428571% 80%;
+  }
+  42.64% {
+    background-position: 85.71428571428571% 100%;
+  }
+  43.68% {
+    background-position: 100% 0%;
+  }
+  44.72% {
+    background-position: 100% 20%;
+  }
+  45.76% {
+    background-position: 100% 40%;
+  }
+  46.8% {
+    background-position: 100% 60%;
+  }
+  47.84% {
+    background-position: 100% 80%;
+  }
+  48.88% {
+    background-position: 100% 100%;
+  }
+  50% {
+    background-position: 0% 0%;
+  }
+  51.04% {
+    background-position: 0% 20%;
+  }
+  52.08% {
+    background-position: 0% 40%;
+  }
+  53.12% {
+    background-position: 0% 60%;
+  }
+  54.16% {
+    background-position: 0% 80%;
+  }
+  55.2% {
+    background-position: 0% 100%;
+  }
+  56.24% {
+    background-position: 14.285714285714285% 0%;
+  }
+  57.28% {
+    background-position: 14.285714285714285% 20%;
+  }
+  58.32% {
+    background-position: 14.285714285714285% 40%;
+  }
+  59.36% {
+    background-position: 14.285714285714285% 60%;
+  }
+  60.4% {
+    background-position: 14.285714285714285% 80%;
+  }
+  61.44% {
+    background-position: 14.285714285714285% 100%;
+  }
+  62.48% {
+    background-position: 28.57142857142857% 0%;
+  }
+  63.52% {
+    background-position: 28.57142857142857% 20%;
+  }
+  64.56% {
+    background-position: 28.57142857142857% 40%;
+  }
+  65.6% {
+    background-position: 28.57142857142857% 60%;
+  }
+  66.64% {
+    background-position: 28.57142857142857% 80%;
+  }
+  67.68% {
+    background-position: 28.57142857142857% 100%;
+  }
+  68.72% {
+    background-position: 42.857142857142854% 0%;
+  }
+  69.76% {
+    background-position: 42.857142857142854% 20%;
+  }
+  70.8% {
+    background-position: 42.857142857142854% 40%;
+  }
+  71.84% {
+    background-position: 42.857142857142854% 60%;
+  }
+  72.88% {
+    background-position: 42.857142857142854% 80%;
+  }
+  73.92% {
+    background-position: 42.857142857142854% 100%;
+  }
+  74.96% {
+    background-position: 57.14285714285714% 0%;
+  }
+  76% {
+    background-position: 57.14285714285714% 20%;
+  }
+  77.04% {
+    background-position: 57.14285714285714% 40%;
+  }
+  78.08% {
+    background-position: 57.14285714285714% 60%;
+  }
+  79.12% {
+    background-position: 57.14285714285714% 80%;
+  }
+  80.16% {
+    background-position: 57.14285714285714% 100%;
+  }
+  81.2% {
+    background-position: 71.42857142857142% 0%;
+  }
+  82.24% {
+    background-position: 71.42857142857142% 20%;
+  }
+  83.28% {
+    background-position: 71.42857142857142% 40%;
+  }
+  84.32% {
+    background-position: 71.42857142857142% 60%;
+  }
+  85.36% {
+    background-position: 71.42857142857142% 80%;
+  }
+  86.4% {
+    background-position: 71.42857142857142% 100%;
+  }
+  87.44% {
+    background-position: 85.71428571428571% 0%;
+  }
+  88.48% {
+    background-position: 85.71428571428571% 20%;
+  }
+  89.52% {
+    background-position: 85.71428571428571% 40%;
+  }
+  90.56% {
+    background-position: 85.71428571428571% 60%;
+  }
+  91.6% {
+    background-position: 85.71428571428571% 80%;
+  }
+  92.64% {
+    background-position: 85.71428571428571% 100%;
+  }
+  93.68% {
+    background-position: 100% 0%;
+  }
+  94.72% {
+    background-position: 100% 20%;
+  }
+  95.76% {
+    background-position: 100% 40%;
+  }
+  96.8% {
+    background-position: 100% 60%;
+  }
+  97.84% {
+    background-position: 100% 80%;
+  }
+  98.88% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
