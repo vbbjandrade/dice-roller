@@ -5,9 +5,12 @@ import { DiceScene } from "./components/DiceScene";
 import { Die, FACES, Faces } from "./utils";
 import "./App.css";
 
+type Operation = "add" | "keepHighest" | "keepLowest";
+
 function App() {
   const [dice, setDice] = useState<Die[]>([]);
   const [isRolling, setIsRolling] = useState(false);
+  const [operation, setOperation] = useState<Operation>("add");
   const nextIdRef = useRef(1);
 
   const handleDiceAdd = (faces: Faces) => {
@@ -33,11 +36,36 @@ function App() {
   function rollDice() {
     if (dice.length === 0) return;
 
-    // Calculate roll results first
-    const expression = dice.map((d) => `1d${d.faces}`).join("+");
-    const roll = new DiceRoll(expression);
+    // Calculate individual roll results
+    const results = dice.map((d) => {
+      const roll = new DiceRoll(`1d${d.faces}`);
+      return roll.total;
+    });
 
-    console.log(`Total for ${expression}:`, roll.total);
+    // Apply operation to results
+    let finalResult: number;
+    switch (operation) {
+      case "keepHighest":
+        finalResult = Math.max(...results);
+        break;
+      case "keepLowest":
+        finalResult = Math.min(...results);
+        break;
+      case "add":
+      default:
+        finalResult = results.reduce((sum, val) => sum + val, 0);
+    }
+
+    // Update dice with their results
+    setDice((prev) => {
+      return prev.map((die, index) => ({
+        ...die,
+        result: results[index],
+      }));
+    });
+
+    console.log(`Individual rolls:`, results);
+    console.log(`Final result (${operation}):`, finalResult);
 
     // Start animation
     setIsRolling(true);
@@ -75,13 +103,25 @@ function App() {
             ))}
             <div style={{ width: "16px" }}></div>
           </div>
-          <button
-            onClick={rollDice}
-            className="roll-button"
-            disabled={dice.length === 0 || isRolling}
-          >
-            <img src="/up.svg" alt="Roll dice" />
-          </button>
+          <div className="roll-controls">
+            <select
+              value={operation}
+              onChange={(e) => setOperation(e.target.value as Operation)}
+              className="operation-select"
+              disabled={isRolling}
+            >
+              <option value="add">Add</option>
+              <option value="keepHighest">Keep Highest</option>
+              <option value="keepLowest">Keep Lowest</option>
+            </select>
+            <button
+              onClick={rollDice}
+              className="roll-button"
+              disabled={dice.length === 0 || isRolling}
+            >
+              <img src="/up.svg" alt="Roll dice" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

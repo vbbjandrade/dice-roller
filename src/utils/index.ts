@@ -22,16 +22,16 @@ export interface Die {
   id: number;
   faces: Faces;
   remove: boolean;
+  result?: number;
 }
 
 export const DICE_SIZE = 50.0;
 
-export const NUM_ROTATIONS = 15.0; // Number of full rotations for the dice
+export const NUM_ROTATIONS = 5.0; // Number of full rotations for the dice
 export const ROLL_DURATION = 2055;
 export const ROLL_ANIMATION_START_DELAY = 180; // Delay before animation starts (ms)
-export const ROLL_ANIMATION_END_DELAY = 1475; // Delay at end of animation (ms)
 export const TOTAL_ROLL_ANIMATION_DURATION =
-  ROLL_DURATION + ROLL_ANIMATION_START_DELAY + ROLL_ANIMATION_END_DELAY;
+  ROLL_DURATION + ROLL_ANIMATION_START_DELAY;
 
 export const INITIAL_ROTATION_MAP = {
   [FACES.d4]: [Math.PI * 0.8, Math.PI * 0.25, 0],
@@ -41,6 +41,15 @@ export const INITIAL_ROTATION_MAP = {
   [FACES.d12]: [Math.PI * 0.175, Math.PI * 0.5, 0],
   [FACES.d20]: [Math.PI * 0.125, Math.PI * 0.5, 0],
 } as const;
+
+export const DICE_COLORS = {
+  [FACES.d4]: "#19a342",
+  [FACES.d6]: "#1dc0d3",
+  [FACES.d8]: "#9334e6",
+  [FACES.d10]: "#e13294",
+  [FACES.d12]: "#d93025",
+  [FACES.d20]: "#f36d00",
+};
 
 export const REPOSITION_DURATION = 1000;
 export const SCALE_DURATION = 1000;

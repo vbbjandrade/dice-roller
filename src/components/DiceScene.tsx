@@ -9,7 +9,7 @@ import {
   useImperativeHandle,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Mesh } from "three";
+import { Text } from "@react-three/drei";
 import {
   DICE_SIZE,
   INITIAL_ROTATION_MAP,
@@ -23,8 +23,15 @@ import {
   TOTAL_ROLL_ANIMATION_DURATION,
   REPOSITION_DURATION,
   SCALE_DURATION,
+  DICE_COLORS,
   easeOutCubic,
 } from "../utils";
+import { Group, Mesh } from "three";
+
+interface DieRefs {
+  group: Group;
+  mesh: Mesh;
+}
 
 interface DieProps {
   faces: Faces;
@@ -32,10 +39,23 @@ interface DieProps {
   scale: number;
   remove: boolean;
   onRemoveAnimation: () => void;
+  isRolling: boolean;
+  result?: number;
 }
 
-const Die = forwardRef<Mesh, DieProps>(
-  ({ faces, position, scale = 1, remove, onRemoveAnimation }, ref) => {
+const Die = forwardRef<DieRefs, DieProps>(
+  (
+    {
+      faces,
+      position,
+      scale = 1,
+      remove,
+      onRemoveAnimation,
+      result,
+      isRolling,
+    },
+    ref
+  ) => {
     const [internalPosition, setInternalPosition] = useState(position);
     const [internalScale, setInternalScale] = useState(0);
     const isPositionAnimatingRef = useRef(false);
@@ -45,8 +65,17 @@ const Die = forwardRef<Mesh, DieProps>(
     const startScaleRef = useRef(scale);
     const startPositionRef = useRef(position);
 
+    const groupRef = useRef<Group>(null);
     const meshRef = useRef<Mesh>(null);
-    useImperativeHandle(ref, () => meshRef.current!, []);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        group: groupRef.current!,
+        mesh: meshRef.current!,
+      }),
+      []
+    );
 
     useEffect(() => {
       if (!remove) return;
@@ -58,9 +87,9 @@ const Die = forwardRef<Mesh, DieProps>(
         isPositionAnimatingRef.current = true;
         positionProgressRef.current = 0;
         startPositionRef.current = [
-          meshRef.current?.position.x ?? position[0],
-          meshRef.current?.position.y ?? position[1],
-          meshRef.current?.position.z ?? position[2],
+          groupRef.current?.position.x ?? position[0],
+          groupRef.current?.position.y ?? position[1],
+          groupRef.current?.position.z ?? position[2],
         ];
       }
     }, [position, internalPosition]);
@@ -69,7 +98,7 @@ const Die = forwardRef<Mesh, DieProps>(
       if (scale !== internalScale) {
         isScaleAnimatingRef.current = true;
         scaleProgressRef.current = 0;
-        startScaleRef.current = meshRef.current?.scale.x ?? scale;
+        startScaleRef.current = groupRef.current?.scale.x ?? scale;
       }
     }, [scale, internalScale]);
 
@@ -86,7 +115,7 @@ const Die = forwardRef<Mesh, DieProps>(
     }, [scale]);
 
     useFrame((_, delta) => {
-      if (!meshRef.current) return;
+      if (!meshRef.current || !groupRef.current) return;
 
       // Handle position animation
       if (isPositionAnimatingRef.current) {
@@ -103,7 +132,7 @@ const Die = forwardRef<Mesh, DieProps>(
         const newZ =
           startPositionRef.current[2] +
           (position[2] - startPositionRef.current[2]) * easedProgress;
-        meshRef.current.position.set(newX, newY, newZ);
+        groupRef.current.position.set(newX, newY, newZ);
 
         if (rawProgress === 1) {
           isPositionAnimatingRef.current = false;
@@ -119,7 +148,7 @@ const Die = forwardRef<Mesh, DieProps>(
         const newScale =
           startScaleRef.current +
           (scale - startScaleRef.current) * easedProgress;
-        meshRef.current.scale.set(newScale, newScale, newScale);
+        groupRef.current.scale.set(newScale, newScale, newScale);
 
         if (rawProgress === 1) {
           isScaleAnimatingRef.current = false;
@@ -129,20 +158,33 @@ const Die = forwardRef<Mesh, DieProps>(
 
     return (
       <>
-        <mesh
-          ref={meshRef}
-          position={internalPosition}
-          scale={internalScale}
-          rotation={INITIAL_ROTATION_MAP[faces]}
-        >
-          <primitive object={getGeometry(faces)} />
-          <meshStandardMaterial
-            color={0xffffff}
-            metalness={0.1}
-            roughness={0.5}
-            envMapIntensity={0.2}
-          />
-        </mesh>
+        <group ref={groupRef} position={internalPosition} scale={internalScale}>
+          <mesh
+            ref={meshRef}
+            rotation={INITIAL_ROTATION_MAP[faces]}
+            position={[0, 0, 0]}
+          >
+            <primitive object={getGeometry(faces)} />
+            <meshStandardMaterial
+              color={DICE_COLORS[faces]}
+              metalness={0.1}
+              roughness={0.5}
+              envMapIntensity={0.2}
+            />
+          </mesh>
+          {!isRolling && (
+            <Text
+              fontWeight={800}
+              position={[0, 0, DICE_SIZE * 0.6]}
+              fontSize={DICE_SIZE * 0.4}
+              color="white"
+              anchorX="center"
+              anchorY="middle"
+            >
+              {result}
+            </Text>
+          )}
+        </group>
       </>
     );
   }
@@ -164,7 +206,7 @@ function Scene({
   onAnimationPlayed,
 }: DiceSceneProps) {
   const { viewport } = useThree();
-  const diceRefs = useRef<(Mesh | null)[]>([]);
+  const diceRefs = useRef<(DieRefs | null)[]>([]);
 
   const rollStartTimeRef = useRef<number | null>(null);
   const hasCompletedRollRef = useRef(false);
@@ -218,6 +260,7 @@ function Scene({
         position: positions[index],
         scale: finalScale,
         remove: die.remove,
+        result: die.result,
       };
     });
   }, [dice, positions, finalScale]);
@@ -256,9 +299,9 @@ function Scene({
         INITIAL_ROTATION_MAP[dice[index].faces];
 
       if (easedProgress === 1) {
-        ref.rotation.set(initialX, initialY, initialZ);
+        ref.mesh.rotation.set(initialX, initialY, initialZ);
       } else {
-        ref.rotation.set(
+        ref.mesh.rotation.set(
           initialX + NUM_ROTATIONS * 2 * Math.PI * (easedProgress + 1),
           initialY + NUM_ROTATIONS * Math.PI * (easedProgress + 1),
           initialZ + NUM_ROTATIONS * Math.PI * (easedProgress + 1)
@@ -288,7 +331,7 @@ function Scene({
           if (ref) {
             const [initialX, initialY, initialZ] =
               INITIAL_ROTATION_MAP[dice[index].faces];
-            ref.rotation.set(initialX, initialY, initialZ);
+            ref.mesh.rotation.set(initialX, initialY, initialZ);
           }
         });
         hasCompletedRollRef.current = true;
@@ -304,11 +347,11 @@ function Scene({
   return (
     <>
       <ambientLight intensity={0.8} />
-      <directionalLight position={[0, 0, 10]} intensity={1.5} />
+      <directionalLight position={[0, 0, 10]} intensity={0.5} />
       <directionalLight position={[5, 5, 5]} intensity={1} />
       <directionalLight position={[-5, 5, 5]} intensity={1} />
       <color attach="background" args={[0x000000]} />
-      {diceList.map(({ faces, position, scale, id, remove }, index) => (
+      {diceList.map(({ faces, position, scale, id, remove, result }, index) => (
         <Die
           key={id}
           ref={(el) => {
@@ -322,11 +365,13 @@ function Scene({
           position={position}
           scale={scale}
           remove={remove}
+          isRolling={isRolling}
           onRemoveAnimation={() => {
             diceSetter((prev) => {
               return prev.filter((d) => d.id !== id);
             });
           }}
+          result={result}
         />
       ))}
     </>

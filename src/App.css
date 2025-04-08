@@ -143,3 +143,57 @@ h3 {
 
 @media (max-width: 600px) {
 }
+
+.roll-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.operation-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  font-size: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 8px;
+  transition: all 0.2s;
+}
+
+.operation-select:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.operation-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.roll-results {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.individual-results {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.roll-result {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 8px;
+}
