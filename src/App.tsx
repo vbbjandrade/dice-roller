@@ -5,12 +5,13 @@ import { DiceScene } from "./components/DiceScene";
 import { Die, FACES, Faces } from "./utils";
 import "./App.css";
 
-type Operation = "add" | "keepHighest" | "keepLowest";
+// type Operation = "add" | "keepHighest" | "keepLowest";
 
 function App() {
   const [dice, setDice] = useState<Die[]>([]);
   const [isRolling, setIsRolling] = useState(false);
-  const [operation, setOperation] = useState<Operation>("add");
+  // const [operation, setOperation] = useState<Operation>("add");
+  const operation: string = "add";
   const nextIdRef = useRef(1);
 
   const handleDiceAdd = (faces: Faces) => {
