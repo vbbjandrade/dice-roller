@@ -18,15 +18,14 @@ export function DiceButton({
 }: DiceButtonProps) {
   const [isSelected, setIsSelected] = useState(count > 0);
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (e.button === 0) {
-      onAdd();
-      setIsSelected(true);
-    } else if (e.button === 2) {
-      onRemove();
-      setIsSelected(count > 1);
-    }
+  const handleAdd = () => {
+    onAdd();
+    setIsSelected(true);
+  };
+
+  const handleDiceRemove = () => {
+    onRemove();
+    setIsSelected(count > 1);
   };
 
   return (
@@ -34,16 +33,52 @@ export function DiceButton({
       <span data-selected={isSelected} className="dice-count">
         {count}
       </span>
-      <button
-        className="dice-button"
-        onClick={handleClick}
-        onContextMenu={handleClick}
-        disabled={isRolling}
-      >
-        <div data-selected={isSelected} className="dice-icon-container">
-          <img src={`/d${faces}.svg`} alt={`d${faces}`} className="dice-icon" />
-        </div>
-      </button>
+      <div className="dice-buttons-wrapper">
+        <button
+          className="dice-button dice-button-desktop"
+          onClick={handleAdd}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            handleDiceRemove();
+          }}
+          disabled={isRolling}
+        >
+          <div data-selected={isSelected} className="dice-icon-container">
+            <img
+              src={`/d${faces}.svg`}
+              alt={`d${faces}`}
+              className="dice-icon"
+            />
+          </div>
+        </button>
+
+        <button
+          className="dice-button dice-button-add"
+          onClick={handleAdd}
+          disabled={isRolling}
+        >
+          <div data-selected={isSelected} className="dice-icon-container">
+            <img
+              src={`/d${faces}.svg`}
+              alt={`d${faces}`}
+              className="dice-icon"
+            />
+          </div>
+        </button>
+        <button
+          className="dice-button dice-button-remove"
+          onClick={handleDiceRemove}
+          disabled={isRolling || count === 0}
+        >
+          <div data-selected={isSelected} className="dice-icon-container">
+            <img
+              src={`/d${faces}.svg`}
+              alt={`d${faces}`}
+              className="dice-icon"
+            />
+          </div>
+        </button>
+      </div>
       <span data-selected={isSelected} className="dice-label">
         1D{faces}
       </span>

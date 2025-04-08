@@ -93,3 +93,44 @@
 .dice-label[data-selected="true"] {
   color: #8a6c3c;
 }
+
+.dice-buttons-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Desktop styles */
+@media (pointer: fine) {
+  .dice-button-desktop {
+    display: flex;
+  }
+
+  .dice-button-add,
+  .dice-button-remove {
+    display: none;
+  }
+}
+
+/* Mobile styles */
+@media (pointer: coarse) {
+  .dice-button-desktop {
+    display: none;
+  }
+
+  .dice-button-add {
+    background-color: rgba(0, 255, 0, 0.1);
+  }
+
+  .dice-button-remove {
+    background-color: rgba(255, 0, 0, 0.1);
+  }
+
+  .dice-button-add::before {
+    border-color: rgba(0, 255, 0, 0.2);
+  }
+
+  .dice-button-remove::before {
+    border-color: rgba(255, 0, 0, 0.2);
+  }
+}
