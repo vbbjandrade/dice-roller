@@ -29,7 +29,7 @@ export const DICE_SIZE = 50.0;
 
 export const NUM_ROTATIONS = 5.0; // Number of full rotations for the dice
 export const ROLL_DURATION = 2055;
-export const ROLL_ANIMATION_START_DELAY = 180; // Delay before animation starts (ms)
+export const ROLL_ANIMATION_START_DELAY = 100; // Delay before animation starts (ms)
 export const TOTAL_ROLL_ANIMATION_DURATION =
   ROLL_DURATION + ROLL_ANIMATION_START_DELAY;
 

@@ -58,6 +58,8 @@ const Die = forwardRef<DieRefs, DieProps>(
   ) => {
     const [internalPosition, setInternalPosition] = useState(position);
     const [internalScale, setInternalScale] = useState(0);
+    const [textOpacity, setTextOpacity] = useState(0);
+    const targetOpacityRef = useRef(0);
     const isPositionAnimatingRef = useRef(false);
     const isScaleAnimatingRef = useRef(false);
     const positionProgressRef = useRef(0);
@@ -114,8 +116,22 @@ const Die = forwardRef<DieRefs, DieProps>(
       }
     }, [scale]);
 
+    useEffect(() => {
+      targetOpacityRef.current = isRolling ? 0 : 1;
+    }, [isRolling]);
+
     useFrame((_, delta) => {
       if (!meshRef.current || !groupRef.current) return;
+
+      // Handle text opacity animation
+      const currentOpacity = textOpacity;
+      const targetOpacity = targetOpacityRef.current;
+      const opacityDiff = targetOpacity - currentOpacity;
+
+      if (Math.abs(opacityDiff) > 0.001) {
+        const newOpacity = currentOpacity + opacityDiff * delta * 5; // Adjust speed with multiplier
+        setTextOpacity(newOpacity);
+      }
 
       // Handle position animation
       if (isPositionAnimatingRef.current) {
@@ -180,6 +196,7 @@ const Die = forwardRef<DieRefs, DieProps>(
               color="white"
               anchorX="center"
               anchorY="middle"
+              fillOpacity={textOpacity}
             >
               {result}
             </Text>
