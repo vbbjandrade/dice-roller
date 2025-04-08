@@ -70,7 +70,7 @@ function App() {
 
     // Start animation
     setIsRolling(true);
-    const audio = new Audio("/sounds/long-roll.mp3");
+    const audio = new Audio(`${base}sounds/long-roll.mp3`);
     audio.play();
   }
 
