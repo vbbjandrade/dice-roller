@@ -19,12 +19,7 @@
   background-size: 100% 100%;
   transition: top 300ms ease-in-out, left 300ms ease-in-out,
     width 300ms ease-in-out, height 300ms ease-in-out;
-  animation: scaleIn 300ms ease-in-out;
   transform-origin: center;
-}
-
-.die-sprite.remove {
-  animation: scaleOut 300ms ease-in-out;
 }
 
 .dice-scene.rolling .die-sprite {
@@ -32,24 +27,6 @@
   background-size: 800% 600%;
   animation: rollAnimation var(--animation-duration, 2000ms) steps(1)
     var(--animation-start-delay, 0ms);
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-@keyframes scaleOut {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(0);
-  }
 }
 
 @keyframes rollAnimation {

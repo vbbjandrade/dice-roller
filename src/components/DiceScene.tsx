@@ -93,7 +93,7 @@ export function DiceScene({
     const containerHeight = containerSize.height;
 
     // Calculate the maximum number of dice that can fit in a row and column
-    const padding = 20;
+    const padding = 16;
     const maxDiceSize = Math.min(containerWidth, containerHeight); // Maximum size to prevent overflow
 
     // Calculate optimal grid dimensions based on aspect ratio
@@ -113,8 +113,17 @@ export function DiceScene({
     const positions = dice.map((_, index) => {
       const row = Math.floor(index / gridCols);
       const col = index % gridCols;
-      const x = padding + col * (scale + padding);
-      const y = padding + row * (scale + padding);
+
+      // Calculate total grid width and height
+      const totalGridWidth = gridCols * (scale + padding) - padding;
+      const totalGridHeight = gridRows * (scale + padding) - padding;
+
+      // Calculate centering offsets
+      const horizontalOffset = (containerWidth - totalGridWidth) / 2;
+      const verticalOffset = (containerHeight - totalGridHeight) / 2;
+
+      const x = horizontalOffset + col * (scale + padding);
+      const y = verticalOffset + row * (scale + padding);
       return [x, y] as [number, number];
     });
 
