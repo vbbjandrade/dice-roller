@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { DiceRoll } from "@dice-roller/rpg-dice-roller";
 import { DiceButton } from "./components/DiceButton";
 import { DiceScene } from "./components/DiceScene";
-import { Die, FACES, Faces } from "./utils";
+import { Die, FACES, Faces, base } from "./utils";
 import "./App.css";
 
 // type Operation = "add" | "keepHighest" | "keepLowest";
@@ -110,7 +110,7 @@ function App() {
               className="roll-button"
               disabled={dice.length === 0 || isRolling}
             >
-              <img src="/up.svg" alt="Roll dice" />
+              <img src={`${base}up.svg`} alt="Roll dice" />
             </button>
           </div>
         </div>

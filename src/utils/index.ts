@@ -7,6 +7,8 @@ import {
   TetrahedronGeometry,
 } from "three";
 
+export const base = "/dice-roller/";
+
 export const FACES = {
   d4: 4,
   d6: 6,

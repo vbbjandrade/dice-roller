@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./DiceButton.css";
+import { base } from "../utils";
 
 interface DiceButtonProps {
   faces: 4 | 6 | 8 | 10 | 12 | 20;
@@ -45,7 +46,7 @@ export function DiceButton({
         >
           <div data-selected={isSelected} className="dice-icon-container">
             <img
-              src={`/d${faces}.svg`}
+              src={`${base}d${faces}.svg`}
               alt={`d${faces}`}
               className="dice-icon"
             />
@@ -59,7 +60,7 @@ export function DiceButton({
         >
           <div data-selected={isSelected} className="dice-icon-container">
             <img
-              src={`/d${faces}.svg`}
+              src={`${base}d${faces}.svg`}
               alt={`d${faces}`}
               className="dice-icon"
             />
@@ -72,7 +73,7 @@ export function DiceButton({
         >
           <div data-selected={isSelected} className="dice-icon-container">
             <img
-              src={`/d${faces}.svg`}
+              src={`${base}d${faces}.svg`}
               alt={`d${faces}`}
               className="dice-icon"
             />
