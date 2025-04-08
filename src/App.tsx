@@ -104,16 +104,6 @@ function App() {
             <div style={{ width: "16px" }}></div>
           </div>
           <div className="roll-controls">
-            <select
-              value={operation}
-              onChange={(e) => setOperation(e.target.value as Operation)}
-              className="operation-select"
-              disabled={isRolling}
-            >
-              <option value="add">Add</option>
-              <option value="keepHighest">Keep Highest</option>
-              <option value="keepLowest">Keep Lowest</option>
-            </select>
             <button
               onClick={rollDice}
               className="roll-button"
